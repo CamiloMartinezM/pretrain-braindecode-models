@@ -1,5 +1,5 @@
 # A unique name for this experiment run
-experiment_name: "TCN-bs_{training_params.batch_size}-model_drop_{model.model_kwargs.additional_kwargs.drop_prob}-weight_decay_{training_params.optimizer_kwargs.weight_decay}"
+experiment_name: "TCN-bs_{training_params.batch_size}-model_drop_{model.model_kwargs.additional_kwargs.drop_prob}-tcn_pooling_{model.model_kwargs.tcn_pooling_strategy}-aug_{training_params.augmentation_params.apply}"
 task: "classification"
 
 # Whether to delete the experiment directory if an error occurs
@@ -18,8 +18,8 @@ dataset_params:
   sfreq: 500.0
   # dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
   # Use a small subset for local testing
-  n_train_files: 3 # Use only 3 training files
-  n_eval_files: 1   # Use only 1 evaluation files
+  n_train_files: 100 # Use only 100 training files
+  n_eval_files: 100 # Use only 100 evaluation files
   pad_end: true # Generate windows from the tail of the signal
   pad_mode: "reflect" # Use reflection padding for the tail
   dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
@@ -37,7 +37,7 @@ model:
     # Optional: additional kwargs for the braindecode model
     # These will be passed to the model's constructor
     additional_kwargs:
-      drop_prob: [0.5, 0.6, 0.7, 0.8] # Dropout probability
+      drop_prob: 0.6 # Dropout probability
 
 # ------------------- TRAINING PARAMETERS -------------------
 # Parameters for pretrain_braindecode_models/modeling/train.py:train_model
@@ -79,7 +79,7 @@ training_params:
   # Parameters for eeg_3d_face/modeling/augmentations.py:build_augmentation_pipeline
   # Uses transforms from the 'torcheeg' library.
   augmentation_params:
-    apply: true # Master switch to enable/disable all augmentations
+    apply: [false, true] # Master switch to enable/disable all augmentations
     # A list of transforms to apply sequentially.
     # Each transform is a dictionary with 'name' and its parameters.
     # 'p' is the probability of applying the transform.

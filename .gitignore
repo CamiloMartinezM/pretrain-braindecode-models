@@ -222,6 +222,7 @@ __marimo__/
 *.tsv
 *.edf
 .vscode
+configure_environment.sh
 models/best/*
 models/*.json
 models/*.json.bak
@@ -233,3 +234,6 @@ models/experiments*/*
 models/experiments.old/*
 data
 data/*
+
+# cluster
+cluster/

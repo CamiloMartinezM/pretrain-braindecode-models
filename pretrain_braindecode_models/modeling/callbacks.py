@@ -122,7 +122,7 @@ class ClassificationAnalysisCallback(Callback):
             cm_filepath=self.output_dir / f"{stage}_train_confusion_matrix.jpg",
             report_filepath=self.output_dir / f"{stage}_train_classification_report.txt",
             cm_title="Training Confusion Matrix",
-            figsize=(6, 5),
+            figsize=(6, 4),
             show=False,
             dpi=300,
         )
@@ -134,7 +134,7 @@ class ClassificationAnalysisCallback(Callback):
             cm_filepath=self.output_dir / f"{stage}_val_confusion_matrix.jpg",
             report_filepath=self.output_dir / f"{stage}_val_classification_report.txt",
             cm_title="Validation Confusion Matrix",
-            figsize=(6, 5),
+            figsize=(6, 4),
             show=False,
             dpi=300,
         )
