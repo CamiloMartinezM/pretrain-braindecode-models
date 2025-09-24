@@ -1,0 +1,55 @@
+# General
+pip
+wheel
+setuptools
+
+# Linting, Logging, App, Type Checking, etc.
+ruff
+mypy
+loguru
+pytest
+pytest-cov
+
+# Replaced typer with cyclopts
+# https://cyclopts.readthedocs.io/en/latest/vs_typer/README.html#typer-comparison
+cyclopts
+
+# Actual dependencies
+PyYAML
+enum34 
+funcsigs
+python-dotenv
+tqdm
+psutil
+types-tqdm
+ipykernel
+numpy<2
+scipy
+pandas
+pandas-stubs
+opencv-python
+matplotlib
+seaborn
+scienceplots
+scikit-learn
+scikit-image
+imageio
+mne
+umap-learn
+iopath
+nbconvert
+braindecode
+prettytable
+adjustText
+textalloc
+huggingface_hub
+
+# PyTorch
+--extra-index-url https://download.pytorch.org/whl/cu129
+torch 
+torchvision 
+torchaudio 
+torchview
+torcheeg
+
+-e .
