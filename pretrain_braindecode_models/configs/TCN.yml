@@ -1,0 +1,144 @@
+# A unique name for this experiment run
+experiment_name: "TCN-bs_{training_params.batch_size}-model_drop_{model.model_kwargs.additional_kwargs.drop_prob}-weight_decay_{training_params.optimizer_kwargs.weight_decay}"
+task: "classification"
+
+# Whether to delete the experiment directory if an error occurs
+delete_when_error: false
+
+# Save the run in a subdirectory
+models_subdir: "experiments_tuh/TCN"
+
+# ------------------- DATASET PARAMETERS -------------------
+# Parameters for pretrain_braindecode_models/features.py:prepare_train_test_data
+dataset_params:
+  name: "tuh_abnormal" # <<< NEW KEY TO SELECT THE DATASET
+  eeg_channels: ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'Cz', 'C4', 'T8', 'TP9', 'CP5', 'CP1', 'CP2', 'CP6', 'TP10', 'P7', 'P3', 'Pz', 'P4', 'P8', 'PO9', 'O1', 'Oz', 'O2', 'PO10', 'AF7', 'AF3', 'AF4', 'AF8', 'F5', 'F1', 'F2', 'F6', 'FT9', 'FT7', 'FC3', 'FC4', 'FT8', 'FT10', 'C5', 'C1', 'C2', 'C6', 'TP7', 'CP3', 'CPz', 'CP4', 'TP8', 'P5', 'P1', 'P2', 'P6', 'PO7', 'PO3', 'POz', 'PO4', 'PO8']
+  eeg_window_seconds: 1.0
+  stride_seconds: 0.5
+  sfreq: 500.0
+  # dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
+  # Use a small subset for local testing
+  n_train_files: 3 # Use only 3 training files
+  n_eval_files: 1   # Use only 1 evaluation files
+  pad_end: true # Generate windows from the tail of the signal
+  pad_mode: "reflect" # Use reflection padding for the tail
+  dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
+  precision: "float32" # Options: float64, float32, float16
+
+# ------------------- MODEL PARAMETERS -------------------
+# The name must match a class in `pretrain_braindecode_models/modeling/models.py`
+model:
+  model_class: BraindecodeClassifier
+  model_kwargs:
+    name: "TCN"
+    braindecode_model_name: "TCN"
+    freeze_encoder: false
+    tcn_pooling_strategy: ["last", "mean", "max"]
+    # Optional: additional kwargs for the braindecode model
+    # These will be passed to the model's constructor
+    additional_kwargs:
+      drop_prob: [0.5, 0.6, 0.7, 0.8] # Dropout probability
+
+# ------------------- TRAINING PARAMETERS -------------------
+# Parameters for pretrain_braindecode_models/modeling/train.py:train_model
+training_params:
+  num_epochs: 1000
+  batch_size: 32
+  use_earlystopping: true
+  patience: 0.1 # Early stopping patience (can be < 1, in which case it's a fraction of num_epochs)
+  earlystopping_metric: "val_balanced_accuracy" # "train_loss", "val_loss", "val_balanced_accuracy", "val_f1_score", "val_precision", "val_recall"
+  checkpoint_metric: "val_balanced_accuracy"
+  scaler: "MNE" # "MNE", "Standard", or null
+  scaler_kwargs:
+    scalings: "mean"
+    with_mean: true
+    with_std: true
+  optimizer: "AdamW"
+  optimizer_kwargs:
+    lr: 1.0e-4
+    amsgrad: true
+    weight_decay: 1.0e-5
+
+  # Whether to save the training and test data for later use
+  save_train_test_data: false
+
+  # Parameters for pretrain_braindecode_models/modeling/plotting.py:plot_history
+  plot_kwargs:
+    figsize: [10, 3]
+    dpi: 600
+    # plt_style: ["science", "nature"]
+    dynamic_clip_iqr_multiplier: null
+    dynamic_clip_on_metrics: false
+    axis_fontsize: "large"
+    text_fontsize: "medium"
+    legend_fontsize: "medium"
+    log_scale_loss: true
+    log_scale_metrics: false
+
+  # ------------------- AUGMENTATION PARAMETERS -------------------
+  # Parameters for eeg_3d_face/modeling/augmentations.py:build_augmentation_pipeline
+  # Uses transforms from the 'torcheeg' library.
+  augmentation_params:
+    apply: true # Master switch to enable/disable all augmentations
+    # A list of transforms to apply sequentially.
+    # Each transform is a dictionary with 'name' and its parameters.
+    # 'p' is the probability of applying the transform.
+    transforms:
+      # Apply a slice transformation, where the original time series is sliced by a window,
+      # and the sliced data is scaled to the original size
+      - name: "RandomWindowSlice"
+        p: 0.25
+        series_dim: -1 # Dimension of the time series (usually -1, meaning last dimension)
+        window_size: 250 # Size of the slice window in number of time points
+      # Randomly mask out parts of the signal
+      - name: "RandomMask"
+        p: 0.25
+        ratio: 0.5 # The proportion of data points covered by the mask out of all data points for each EEG signal sample. (default: 0.5)
+      # Apply window warping, where a part of time series data is warpped by speeding it up or down.
+      - name: "RandomWindowWarp"
+        p: 0.25
+        series_dim: -1 # Dimension of the time series (usually -1, meaning last dimension)
+        window_size: 250 # Size of the warp window in number of time points
+        # The size of the window after the warp. If warp_size is larger than window_size, it means
+        # slowing down, and if warp_size is smaller than window_size, it means speeding up
+        # (default: 24)
+        warp_size: 125 # Min size of the window after warp (2x speed)
+      - name: "RandomWindowWarp"
+        p: 0.25
+        series_dim: -1
+        window_size: 250
+        warp_size: 500 # Min size of the window after warp (0.5x speed)
+      # Add Gaussian noise
+      - name: "RandomNoise"
+        p: 0.5
+        mean: 0.0 # Mean of the noise
+        std: 1.0 # Std dev of the noise
+      # Add PCA noise
+      - name: "RandomPCANoise"
+        p: 0.5
+        mean: 0.0 # The mean of the normal distribution of noise. (default: 0.0)
+        std: 1.0 # The standard deviation of the normal distribution of noise. (default: 0.0)
+        series_dim: -1 # Dimension of the time series in the input tensor. (default: -1)
+        n_components: 2 # Number of components to add noise. if n_components is not set, the first two components are used to add noise.
+      # Temporally shift the signal, after which the specified dimension is shifted backward, and the part
+      # shifted out of the Tensor is added to the front of that dimension.
+      # - name: "RandomShift"
+      #   p: 0.5
+      #   dim: -1 # Dimension to shift (usually -1, meaning last dimension)
+      #   shift_min: -100
+      #   shift_max: 100
+      # Shift the frequency spectrum, after which the EEG signals of all channels are equally shifted in
+      # the frequency domain.
+      # - name: "RandomFrequencyShift"
+      #   p: 0.25
+      #   sampling_rate: 500.0 # Must match dataset's sampling frequency
+      #   series_dim: -1 # Dimension of the time series in the input tensor (default: -1)
+      #   shift_min: -50.0 # Min frequency shift in Hz
+      #   shift_max: 50.0 # Max frequency shift in Hz
+      # Transformation such that the input signal becomes the opposite of the reversed sign with a given probability
+      - name: "RandomSignFlip"
+        p: 0.25
+      # Randomly mask out parts of the signal
+      - name: "RandomMask"
+        p: 0.1
+        ratio: 0.5 # The proportion of data points covered by the mask out of all data points for each EEG signal sample. (default: 0.5)
