@@ -151,6 +151,13 @@ class ClassificationAnalysisCallback(Callback):
         current_score = trainer.callback_metrics.get(self.monitor_metric)
         if current_score is None:
             return
+        
+        # Sometimes at epoch 0, the metric is set to 1.0 (e.g., balanced_accuracy). Ignore that.
+        if trainer.current_epoch == 0 and current_score.item() >= 1.0:
+            logger.debug(
+                f"Ignoring {self.monitor_metric}={current_score.item():.4f} at epoch 0."
+            )
+            return
 
         is_new_best = False
         if (self.mode == "max" and current_score > self.best_score) or (

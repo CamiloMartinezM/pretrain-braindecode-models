@@ -1,5 +1,5 @@
 # A unique name for this experiment run
-experiment_name: "TCN-bs_{training_params.batch_size}-model_drop_{model.model_kwargs.additional_kwargs.drop_prob}-tcn_pooling_{model.model_kwargs.tcn_pooling_strategy}-aug_{training_params.augmentation_params.apply}"
+experiment_name: "TCN-files_{dataset_params.n_train_files}-bs_{training_params.batch_size}-model_drop_{model.model_kwargs.additional_kwargs.drop_prob}-tcn_pooling_{model.model_kwargs.tcn_pooling_strategy}-aug_{training_params.augmentation_params.apply}"
 task: "classification"
 
 # Whether to delete the experiment directory if an error occurs
@@ -11,15 +11,15 @@ models_subdir: "experiments_tuh/TCN"
 # ------------------- DATASET PARAMETERS -------------------
 # Parameters for pretrain_braindecode_models/features.py:prepare_train_test_data
 dataset_params:
-  name: "tuh_abnormal" # <<< NEW KEY TO SELECT THE DATASET
+  name: "tuh_abnormal"
   eeg_channels: ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'Cz', 'C4', 'T8', 'TP9', 'CP5', 'CP1', 'CP2', 'CP6', 'TP10', 'P7', 'P3', 'Pz', 'P4', 'P8', 'PO9', 'O1', 'Oz', 'O2', 'PO10', 'AF7', 'AF3', 'AF4', 'AF8', 'F5', 'F1', 'F2', 'F6', 'FT9', 'FT7', 'FC3', 'FC4', 'FT8', 'FT10', 'C5', 'C1', 'C2', 'C6', 'TP7', 'CP3', 'CPz', 'CP4', 'TP8', 'P5', 'P1', 'P2', 'P6', 'PO7', 'PO3', 'POz', 'PO4', 'PO8']
   eeg_window_seconds: 1.0
-  stride_seconds: 0.5
+  stride_seconds: 1.0
   sfreq: 500.0
   # dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
   # Use a small subset for local testing
-  n_train_files: 100 # Use only 100 training files
-  n_eval_files: 100 # Use only 100 evaluation files
+  n_train_files: 70 # Use only 100 training files
+  n_eval_files: 70 # Use only 100 evaluation files
   pad_end: true # Generate windows from the tail of the signal
   pad_mode: "reflect" # Use reflection padding for the tail
   dim_order: "channels_first" # "channels_first" for Braindecode/CNNs, "time_first" for LSTM/MLP
